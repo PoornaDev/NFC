@@ -10,6 +10,7 @@ import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -54,13 +55,16 @@ public class NFCActivity extends AppCompatActivity implements
 
     private void handleNfcIntent(Intent nfcIntent) {
         if(nfcIntent!=null && nfcIntent.getAction().equals(NfcAdapter.ACTION_NDEF_DISCOVERED)){
-            Parcelable receivedPayload =  nfcIntent.getParcelableExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            Parcelable[] receivedPayload =  nfcIntent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
 
             if (receivedPayload!=null) {
-                NdefMessage receivedMessage = (NdefMessage) receivedPayload;
+                NdefMessage receivedMessage = (NdefMessage) receivedPayload[0];
                 NdefRecord[] receivedRecord = receivedMessage.getRecords();
-                String payload = new String(receivedRecord[0].getPayload());
+                byte[] decodedBytes = Base64.decode(receivedRecord[0].getPayload(),Base64.DEFAULT);
+                String payload = new String(decodedBytes);
                 Log.i(TAG,"Received payload::"+payload );
+                Toast.makeText(this, "Received Data::: "+payload, Toast.LENGTH_LONG).show();
+                //TODO: Need to reset intent?? to handle orientation??
             }
         }
 
@@ -101,14 +105,16 @@ public class NFCActivity extends AppCompatActivity implements
 
     private NdefRecord createNdefRecord(String textToSend) {
         NdefRecord record = null;
-        byte[] payload = textToSend.getBytes(Charset.defaultCharset());
+        byte[] data = textToSend.getBytes(Charset.defaultCharset());
+        byte[] base64Payload = Base64.encode(data, Base64.DEFAULT);
+
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
              record = new NdefRecord(NdefRecord.TNF_WELL_KNOWN
-            , NdefRecord.RTD_TEXT, new byte[0], payload);
+            , NdefRecord.RTD_TEXT, new byte[0], base64Payload);
 
         } else {
-            record = NdefRecord.createMime("text/plain",payload);
+            record = NdefRecord.createMime("text/plain",base64Payload);
         }
         Log.i(TAG, "NdefRecord::"+record);
         return record;
@@ -116,6 +122,12 @@ public class NFCActivity extends AppCompatActivity implements
 
     @Override
     public void onNdefPushComplete(NfcEvent event) {
-        Toast.makeText(this, "Message sent successfully", Toast.LENGTH_SHORT).show();
+
+        //Toast.makeText(this, "Message sent successfully", Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "Message sent successfully::");
+        if(mInputView!=null) {
+            //reset input box
+            mInputView.setText("");
+        }
     }
 }
