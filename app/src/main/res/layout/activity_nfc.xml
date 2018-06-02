@@ -11,12 +11,11 @@
         android:id="@+id/input_text"
        />
 
-    <Button android:id="@+id/send_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:text="SEND"
-        android:visibility="gone"
-        android:layout_centerInParent="true" />
+    <LinearLayout android:id="@+id/data_layout"
+        android:layout_below="@+id/input_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+    </LinearLayout>
 
 </RelativeLayout>
